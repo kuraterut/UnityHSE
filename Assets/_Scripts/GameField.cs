@@ -9,11 +9,13 @@ namespace _Scripts
         public int height = 4;
         private List<Cell> _cells = new List<Cell>();
         [SerializeField] public GameObject cellPrefab;
+        public Score scoreHeader;
 
         void Start()
         {
+            scoreHeader = FindFirstObjectByType<Score>();
             CreateCell();
-            CreateCell(); // Создаем две клетки в начале
+            CreateCell(); 
         }
 
         public (int x, int y) GetEmptyPosition()
@@ -37,15 +39,15 @@ namespace _Scripts
                 return emptyPositions[randomIndex];
             }
 
-            return (-1, -1); // нет пустых клеток
+            return (-1, -1); 
         }
 
         public void CreateCell()
         {
             var position = GetEmptyPosition();
-            if (position != (-1, -1)) // проверка на наличие пустой клетки
+            if (position != (-1, -1)) 
             {
-                int newValue = Random.value < 0.9f ? 1 : 2;
+                int newValue = Random.value < 0.8f ? 1 : 2;
                 Cell newCell = new Cell(position, newValue);
                 _cells.Add(newCell);
                 CreateCellView(newCell);
@@ -82,7 +84,117 @@ namespace _Scripts
             CellView cellView = cellObject.GetComponent<CellView>();
             cellView.Initialize(cell);
         }
+        public void MoveCells(Vector2 direction)
+        {
+            if (direction == Vector2.left)
+            {
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    DestroyCellView(_cells[i]);
+                    Debug.Log("ДО: " + _cells[i].Position);
+                }
+                _cells = CellsMoving.MoveFieldLeft(_cells);
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    CreateCellView(_cells[i]);
+                    Debug.Log("ПОСЛЕ: " + _cells[i].Position);
+                }
+                CreateCell();
+            }
+            if (direction == Vector2.right)
+            {
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    DestroyCellView(_cells[i]);
+                    Debug.Log("ДО: " + _cells[i].Position);
+                }
+                _cells = CellsMoving.MoveFieldRight(_cells);
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    CreateCellView(_cells[i]);
+                    Debug.Log("ПОСЛЕ: " + _cells[i].Position);
+                }
+                CreateCell();
+            }
+            if (direction == Vector2.up)
+            {
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    DestroyCellView(_cells[i]);
+                    Debug.Log("ДО: " + _cells[i].Position);
+                }
+                _cells = CellsMoving.MoveFieldUp(_cells);
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    CreateCellView(_cells[i]);
+                    Debug.Log("ПОСЛЕ: " + _cells[i].Position);
+                }
+                CreateCell();
+            }
+            if (direction == Vector2.down)
+            {
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    DestroyCellView(_cells[i]);
+                    Debug.Log("ДО: " + _cells[i].Position);
+                }
+                _cells = CellsMoving.MoveFieldDown(_cells);
+                for (int i = 0; i < _cells.Count; i++)
+                {
+                    CreateCellView(_cells[i]);
+                    Debug.Log("ПОСЛЕ: " + _cells[i].Position);
+                }
+                CreateCell();
+            }
+            scoreHeader.UpdateScore(CalculateScore());
+        }
 
+        
+        private void UpdateCellView(Cell cell)
+        {
+            var cellView = FindCellView(cell);
+            if (cellView != null)
+            {
+                var realPos = GetRealPosition(cell.Position);
+                cellView.transform.localPosition = new Vector3((float)realPos.x, (float)realPos.y, 0);
+                cellView.UpdateValue(cell.Value);
+            }
+        }
+
+        private CellView FindCellView(Cell cell)
+        {
+            foreach (Transform child in transform)
+            {
+                var cellView = child.GetComponent<CellView>();
+                if (cellView != null && cellView.GetCell() == cell)
+                {
+                    return cellView;
+                }
+            }
+            return null;
+        }
+        
+        
+
+        private void DestroyCellView(Cell cell)
+        {
+            var cellView = FindCellView(cell);
+            if (cellView != null)
+            {
+                Destroy(cellView.gameObject);
+            }
+        }
+
+        private int CalculateScore()
+        {
+            int score = 0;
+            for (int i = 0; i < _cells.Count; i++)
+            {
+                Debug.Log(_cells[i].Value);
+                score += _cells[i].Value;
+            }
+            return score*2;
+        }
         
     }
 }
